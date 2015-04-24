@@ -25,7 +25,7 @@
 
 #include <Wire.h>
 
-#include "HTU21D.h"
+#include "SparkFunHTU21DBreakout.h"
 
 HTU21D::HTU21D()
 {
