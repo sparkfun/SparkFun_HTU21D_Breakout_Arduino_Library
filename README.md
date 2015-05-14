@@ -1,9 +1,10 @@
-HTU21D Breakout
-===============
+SparkFun Humidity and Temperature Sensor Breakout - HTU21D
+===========================================================
 
 
-[![HTU21D Breakout Board](https://dlnmh9ip6v2uc.cloudfront.net/images/products/1/2/0/6/4/12064-04.jpg)  
-*HTU21D Breakout Board (SEN-12064)*](https://www.sparkfun.com/products/12064)
+![SparkFun Humidity and Temperature Sensor Breakout - HTU21D](https://dlnmh9ip6v2uc.cloudfront.net/images/products/1/2/0/6/4/12064-04.jpg)  
+
+[*SparkFun Humidity and Temperature Sensor Breakout - HTU21D (SEN-12064)*](https://www.sparkfun.com/products/12064)
 
 This is a breadboard friendly breakout board for the Measurement Specialties high-precision, low-power digital humidity sensor.
 
@@ -11,6 +12,7 @@ Repository Contents
 -------------------
 
 * **/examples** - Example sketches for the library (.ino). Run these from the Arduino IDE. 
+* **/src** - Source files for the library (.cpp, .h).
 * **keywords.txt** - Keywords from this library that will be highlighted in the Arduino IDE. 
 * **library.properties** - General library properties for the Arduino package manager. 
 
