@@ -86,8 +86,8 @@ float HTU21D::readHumidity(void)
 	rawHumidity &= 0xFFFC; //Zero out the status bits but keep them in place
 	
 	//Given the raw humidity data, calculate the actual relative humidity
-	float tempRH = rawHumidity / (float)65536; //2^16 = 65536
-	float rh = -6 + (125 * tempRH); //From page 14
+	float tempRH = rawHumidity * (125.0 / 65536.0); //2^16 = 65536
+	float rh = tempRH - 6.0; //From page 14
 	
 	return(rh);
 }
@@ -138,8 +138,8 @@ float HTU21D::readTemperature(void)
 	rawTemperature &= 0xFFFC; //Zero out the status bits but keep them in place
 
 	//Given the raw temperature data, calculate the actual temperature
-	float tempTemperature = rawTemperature / (float)65536; //2^16 = 65536
-	float realTemperature = (float)(-46.85 + (175.72 * tempTemperature)); //From page 14
+	float tempTemperature = rawTemperature * (175.72 / 65536.0); //2^16 = 65536
+	float realTemperature = tempTemperature - 46.85; //From page 14
 
 	return(realTemperature);  
 }
