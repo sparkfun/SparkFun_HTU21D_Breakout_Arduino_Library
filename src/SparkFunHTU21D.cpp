@@ -118,20 +118,17 @@ float HTU21D::readTemperature(void)
 
 void HTU21D::setResolution(byte resolution)
 {
-  byte userRegister = read_user_register(); //Go get the current register state
+  byte userRegister = readUserRegister(); //Go get the current register state
   userRegister &= B01111110; //Turn off the resolution bits
   resolution &= B10000001; //Turn off all other bits but resolution bits
   userRegister |= resolution; //Mask in the requested resolution bits
   
   //Request a write to user register
-  Wire.beginTransmission(HTDU21D_ADDRESS);
-  Wire.write(WRITE_USER_REG); //Write to the user register
-  Wire.write(userRegister); //Write the new resolution bits
-  Wire.endTransmission();
+  writeUserRegister(userRegister);
 }
 
 //Read the user register
-byte HTU21D::read_user_register(void)
+byte HTU21D::readUserRegister(void)
 {
   byte userRegister;
   
@@ -146,6 +143,14 @@ byte HTU21D::read_user_register(void)
   userRegister = Wire.read();
 
   return(userRegister);  
+}
+
+void HTU21D::writeUserRegister(byte val)
+{
+  Wire.beginTransmission(HTDU21D_ADDRESS);
+  Wire.write(WRITE_USER_REG); //Write to the user register
+  Wire.write(val); //Write the new resolution bits
+  Wire.endTransmission();
 }
 
 //Give this function the 2 byte message (measurement) and the check_value byte from the HTU21D

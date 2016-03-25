@@ -28,6 +28,16 @@
 #define READ_USER_REG  0xE7
 #define SOFT_RESET  0xFE
 
+#define USER_REGISTER_RESOLUTION_MASK 0x81
+#define USER_REGISTER_RESOLUTION_RH12_TEMP14 0x00
+#define USER_REGISTER_RESOLUTION_RH8_TEMP12 0x01
+#define USER_REGISTER_RESOLUTION_RH10_TEMP13 0x80
+#define USER_REGISTER_RESOLUTION_RH11_TEMP11 0x81
+
+#define USER_REGISTER_END_OF_BATTERY 0x40
+#define USER_REGISTER_HEATER_ENABLED 0x04
+#define USER_REGISTER_DISABLE_OTP_RELOAD 0x02
+
 class HTU21D {
 
 public:
@@ -39,12 +49,14 @@ public:
   float readTemperature(void);
   void setResolution(byte resBits);
 
+  byte readUserRegister(void);
+  void writeUserRegister(byte val);
+
   //Public Variables
 
 private:
   //Private Functions
 
-  byte read_user_register(void);
   byte check_crc(uint16_t message_from_sensor, uint8_t check_value_from_sensor);
   float read_value(byte cmd);
 
