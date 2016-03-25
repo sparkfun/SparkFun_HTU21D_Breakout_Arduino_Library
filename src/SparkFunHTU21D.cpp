@@ -47,8 +47,8 @@ float HTU21D::read_value(byte cmd)
 	Wire.write(cmd); //Measure value (prefer no hold!)
 	Wire.endTransmission();
 
-	//Hang out while measurement is taken. 50mS max, page 4 of datasheet.
-	delay(55);
+	//Hang out while measurement is taken. datasheet says 50ms, practice may call for more
+	delay(105);
 
 	//Comes back in three bytes, data(MSB) / data(LSB) / Checksum
 	Wire.requestFrom(HTDU21D_ADDRESS, 3);
