@@ -40,6 +40,9 @@ void HTU21D::begin(void)
   Wire.begin();
 }
 
+#define MAX_WAIT 100
+#define DELAY_INTERVAL 10
+#define MAX_COUNTER (MAX_WAIT/DELAY_INTERVAL)
 float HTU21D::read_value(byte cmd)
 {
 	//Request a humidity reading
@@ -48,19 +51,16 @@ float HTU21D::read_value(byte cmd)
 	Wire.endTransmission();
 
 	//Hang out while measurement is taken. datasheet says 50ms, practice may call for more
-	delay(105);
+        byte num_read;
+        byte counter;
+        for (counter = 0, num_read = 0; counter < MAX_COUNTER && num_read != 3; counter++) {
+	        delay(DELAY_INTERVAL);
 
-	//Comes back in three bytes, data(MSB) / data(LSB) / Checksum
-	Wire.requestFrom(HTDU21D_ADDRESS, 3);
+                //Comes back in three bytes, data(MSB) / data(LSB) / Checksum
+                num_read = Wire.requestFrom(HTDU21D_ADDRESS, 3);
+        }
 
-	//Wait for data to become available
-	int counter = 0;
-	while(Wire.available() < 3)
-	{
-		counter++;
-		delay(1);
-		if(counter > 100) return 998; //Error out
-	}
+        if (counter == MAX_COUNTER) return 998; //Error out
 
 	byte msb, lsb, checksum;
 	msb = Wire.read();
