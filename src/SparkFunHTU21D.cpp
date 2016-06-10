@@ -40,6 +40,40 @@ void HTU21D::begin(void)
   Wire.begin();
 }
 
+#define MAX_WAIT 100
+#define DELAY_INTERVAL 10
+#define MAX_COUNTER (MAX_WAIT/DELAY_INTERVAL)
+float HTU21D::read_value(byte cmd)
+{
+	//Request a humidity reading
+	Wire.beginTransmission(HTDU21D_ADDRESS);
+	Wire.write(cmd); //Measure value (prefer no hold!)
+	Wire.endTransmission();
+
+	//Hang out while measurement is taken. datasheet says 50ms, practice may call for more
+        byte num_read;
+        byte counter;
+        for (counter = 0, num_read = 0; counter < MAX_COUNTER && num_read != 3; counter++) {
+	        delay(DELAY_INTERVAL);
+
+                //Comes back in three bytes, data(MSB) / data(LSB) / Checksum
+                num_read = Wire.requestFrom(HTDU21D_ADDRESS, 3);
+        }
+
+        if (counter == MAX_COUNTER) return 998; //Error out
+
+	byte msb, lsb, checksum;
+	msb = Wire.read();
+	lsb = Wire.read();
+	checksum = Wire.read();
+
+	unsigned int raw_value = ((unsigned int) msb << 8) | (unsigned int) lsb;
+
+	if(check_crc(raw_value, checksum) != 0) return(999); //Error out
+
+        return raw_value & 0xFFFC; // Zero out the status bits
+}
+
 //Read the humidity
 /*******************************************************************************************/
 //Calc humidity and return it to the user
@@ -47,43 +81,7 @@ void HTU21D::begin(void)
 //Returns 999 if CRC is wrong
 float HTU21D::readHumidity(void)
 {
-	//Request a humidity reading
-	Wire.beginTransmission(HTDU21D_ADDRESS);
-	Wire.write(TRIGGER_HUMD_MEASURE_NOHOLD); //Measure humidity with no bus holding
-	Wire.endTransmission();
-
-	//Hang out while measurement is taken. 50mS max, page 4 of datasheet.
-	delay(55);
-
-	//Comes back in three bytes, data(MSB) / data(LSB) / Checksum
-	Wire.requestFrom(HTDU21D_ADDRESS, 3);
-
-	//Wait for data to become available
-	int counter = 0;
-	while(Wire.available() < 3)
-	{
-		counter++;
-		delay(1);
-		if(counter > 100) return 998; //Error out
-	}
-
-	byte msb, lsb, checksum;
-	msb = Wire.read();
-	lsb = Wire.read();
-	checksum = Wire.read();
-
-	/* //Used for testing
-	byte msb, lsb, checksum;
-	msb = 0x4E;
-	lsb = 0x85;
-	checksum = 0x6B;*/
-	
-	unsigned int rawHumidity = ((unsigned int) msb << 8) | (unsigned int) lsb;
-
-	if(check_crc(rawHumidity, checksum) != 0) return(999); //Error out
-
-	//sensorStatus = rawHumidity & 0x0003; //Grab only the right two bits
-	rawHumidity &= 0xFFFC; //Zero out the status bits but keep them in place
+        unsigned int rawHumidity = read_value(TRIGGER_HUMD_MEASURE_NOHOLD);
 	
 	//Given the raw humidity data, calculate the actual relative humidity
 	float tempRH = rawHumidity * (125.0 / 65536.0); //2^16 = 65536
@@ -99,43 +97,7 @@ float HTU21D::readHumidity(void)
 //Returns 999 if CRC is wrong
 float HTU21D::readTemperature(void)
 {
-	//Request the temperature
-	Wire.beginTransmission(HTDU21D_ADDRESS);
-	Wire.write(TRIGGER_TEMP_MEASURE_NOHOLD);
-	Wire.endTransmission();
-
-	//Hang out while measurement is taken. 50mS max, page 4 of datasheet.
-	delay(55);
-
-	//Comes back in three bytes, data(MSB) / data(LSB) / Checksum
-	Wire.requestFrom(HTDU21D_ADDRESS, 3);
-
-	//Wait for data to become available
-	int counter = 0;
-	while(Wire.available() < 3)
-	{
-		counter++;
-		delay(1);
-		if(counter > 100) return 998; //Error out
-	}
-
-	unsigned char msb, lsb, checksum;
-	msb = Wire.read();
-	lsb = Wire.read();
-	checksum = Wire.read();
-
-	/* //Used for testing
-	byte msb, lsb, checksum;
-	msb = 0x68;
-	lsb = 0x3A;
-	checksum = 0x7C; */
-
-	unsigned int rawTemperature = ((unsigned int) msb << 8) | (unsigned int) lsb;
-
-	if(check_crc(rawTemperature, checksum) != 0) return(999); //Error out
-
-	//sensorStatus = rawTemperature & 0x0003; //Grab only the right two bits
-	rawTemperature &= 0xFFFC; //Zero out the status bits but keep them in place
+        unsigned int rawTemperature = read_value(TRIGGER_TEMP_MEASURE_NOHOLD);
 
 	//Given the raw temperature data, calculate the actual temperature
 	float tempTemperature = rawTemperature * (175.72 / 65536.0); //2^16 = 65536
@@ -156,20 +118,17 @@ float HTU21D::readTemperature(void)
 
 void HTU21D::setResolution(byte resolution)
 {
-  byte userRegister = read_user_register(); //Go get the current register state
+  byte userRegister = readUserRegister(); //Go get the current register state
   userRegister &= B01111110; //Turn off the resolution bits
   resolution &= B10000001; //Turn off all other bits but resolution bits
   userRegister |= resolution; //Mask in the requested resolution bits
   
   //Request a write to user register
-  Wire.beginTransmission(HTDU21D_ADDRESS);
-  Wire.write(WRITE_USER_REG); //Write to the user register
-  Wire.write(userRegister); //Write the new resolution bits
-  Wire.endTransmission();
+  writeUserRegister(userRegister);
 }
 
 //Read the user register
-byte HTU21D::read_user_register(void)
+byte HTU21D::readUserRegister(void)
 {
   byte userRegister;
   
@@ -184,6 +143,14 @@ byte HTU21D::read_user_register(void)
   userRegister = Wire.read();
 
   return(userRegister);  
+}
+
+void HTU21D::writeUserRegister(byte val)
+{
+  Wire.beginTransmission(HTDU21D_ADDRESS);
+  Wire.write(WRITE_USER_REG); //Write to the user register
+  Wire.write(val); //Write the new resolution bits
+  Wire.endTransmission();
 }
 
 //Give this function the 2 byte message (measurement) and the check_value byte from the HTU21D
