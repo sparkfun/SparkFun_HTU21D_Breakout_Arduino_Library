@@ -35,26 +35,25 @@ HTU21D::HTU21D()
 //Begin
 /*******************************************************************************************/
 //Start I2C communication
-void HTU21D::begin(void)
+void HTU21D::begin(TwoWire &wirePort)
 {
-  Wire.begin();
+  _i2cPort = &wirePort; //Grab which port the user wants us to use
+  
+  _i2cPort->begin();
 }
 
 #define MAX_WAIT 100
 #define DELAY_INTERVAL 10
 #define MAX_COUNTER (MAX_WAIT/DELAY_INTERVAL)
 
-#define ERROR_I2C_TIMEOUT 	998
-#define ERROR_BAD_CRC		999
-
 //Given a command, reads a given 2-byte value with CRC from the HTU21D
 uint16_t HTU21D::readValue(byte cmd)
 {
   //Request a humidity reading
-  Wire.beginTransmission(HTU21D_ADDRESS);
-  Wire.write(cmd); //Measure value (prefer no hold!)
-  Wire.endTransmission();
-
+  _i2cPort->beginTransmission(HTU21D_ADDRESS);
+  _i2cPort->write(cmd); //Measure value (prefer no hold!)
+  _i2cPort->endTransmission();
+  
   //Hang out while measurement is taken. datasheet says 50ms, practice may call for more
   byte toRead;
   byte counter;
@@ -63,15 +62,15 @@ uint16_t HTU21D::readValue(byte cmd)
     delay(DELAY_INTERVAL);
 
     //Comes back in three bytes, data(MSB) / data(LSB) / Checksum
-    toRead = Wire.requestFrom(HTU21D_ADDRESS, 3);
+    toRead = _i2cPort->requestFrom(HTU21D_ADDRESS, 3);
   }
 
   if (counter == MAX_COUNTER) return (ERROR_I2C_TIMEOUT); //Error out
 
   byte msb, lsb, checksum;
-  msb = Wire.read();
-  lsb = Wire.read();
-  checksum = Wire.read();
+  msb = _i2cPort->read();
+  lsb = _i2cPort->read();
+  checksum = _i2cPort->read();
 
   uint16_t rawValue = ((uint16_t) msb << 8) | (uint16_t) lsb;
 
@@ -143,24 +142,24 @@ byte HTU21D::readUserRegister(void)
   byte userRegister;
 
   //Request the user register
-  Wire.beginTransmission(HTU21D_ADDRESS);
-  Wire.write(READ_USER_REG); //Read the user register
-  Wire.endTransmission();
+  _i2cPort->beginTransmission(HTU21D_ADDRESS);
+  _i2cPort->write(READ_USER_REG); //Read the user register
+  _i2cPort->endTransmission();
 
   //Read result
-  Wire.requestFrom(HTU21D_ADDRESS, 1);
+  _i2cPort->requestFrom(HTU21D_ADDRESS, 1);
 
-  userRegister = Wire.read();
+  userRegister = _i2cPort->read();
 
   return (userRegister);
 }
 
 void HTU21D::writeUserRegister(byte val)
 {
-  Wire.beginTransmission(HTU21D_ADDRESS);
-  Wire.write(WRITE_USER_REG); //Write to the user register
-  Wire.write(val); //Write the new resolution bits
-  Wire.endTransmission();
+  _i2cPort->beginTransmission(HTU21D_ADDRESS);
+  _i2cPort->write(WRITE_USER_REG); //Write to the user register
+  _i2cPort->write(val); //Write the new resolution bits
+  _i2cPort->endTransmission();
 }
 
 //Give this function the 2 byte message (measurement) and the check_value byte from the HTU21D

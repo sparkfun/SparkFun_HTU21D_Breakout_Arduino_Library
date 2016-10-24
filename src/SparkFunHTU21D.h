@@ -22,6 +22,9 @@
 
 #define HTU21D_ADDRESS 0x40  //Unshifted 7-bit I2C address for the sensor
 
+#define ERROR_I2C_TIMEOUT 	998
+#define ERROR_BAD_CRC		999
+
 #define TRIGGER_TEMP_MEASURE_HOLD  0xE3
 #define TRIGGER_HUMD_MEASURE_HOLD  0xE5
 #define TRIGGER_TEMP_MEASURE_NOHOLD  0xF3
@@ -46,7 +49,7 @@ public:
   HTU21D();
 
   //Public Functions
-  void begin();
+  void begin(TwoWire &wirePort = Wire); //If user doesn't specificy then Wire will be used
   float readHumidity(void);
   float readTemperature(void);
   void setResolution(byte resBits);
@@ -58,6 +61,7 @@ public:
 
 private:
   //Private Functions
+  TwoWire *_i2cPort; //The generic connection to user's chosen I2C hardware
 
   byte checkCRC(uint16_t message_from_sensor, uint8_t check_value_from_sensor);
   uint16_t readValue(byte cmd);
