@@ -44,6 +44,9 @@ void HTU21D::begin(void)
 #define DELAY_INTERVAL 10
 #define MAX_COUNTER (MAX_WAIT/DELAY_INTERVAL)
 
+#define ERROR_I2C_TIMEOUT 	998
+#define ERROR_BAD_CRC		999
+
 //Given a command, reads a given 2-byte value with CRC from the HTU21D
 uint16_t HTU21D::readValue(byte cmd)
 {
@@ -63,7 +66,7 @@ uint16_t HTU21D::readValue(byte cmd)
     toRead = Wire.requestFrom(HTU21D_ADDRESS, 3);
   }
 
-  if (counter == MAX_COUNTER) return 998; //Error out
+  if (counter == MAX_COUNTER) return (ERROR_I2C_TIMEOUT); //Error out
 
   byte msb, lsb, checksum;
   msb = Wire.read();
@@ -72,7 +75,7 @@ uint16_t HTU21D::readValue(byte cmd)
 
   uint16_t rawValue = ((uint16_t) msb << 8) | (uint16_t) lsb;
 
-  if (checkCRC(rawValue, checksum) != 0) return (999); //Error out
+  if (checkCRC(rawValue, checksum) != 0) return (ERROR_BAD_CRC); //Error out
 
   return rawValue & 0xFFFC; // Zero out the status bits
 }
@@ -85,6 +88,8 @@ uint16_t HTU21D::readValue(byte cmd)
 float HTU21D::readHumidity(void)
 {
   uint16_t rawHumidity = readValue(TRIGGER_HUMD_MEASURE_NOHOLD);
+  
+  if(rawHumidity == ERROR_I2C_TIMEOUT || rawHumidity == ERROR_BAD_CRC) return(rawHumidity);
 
   //Given the raw humidity data, calculate the actual relative humidity
   float tempRH = rawHumidity * (125.0 / 65536.0); //2^16 = 65536
@@ -101,6 +106,8 @@ float HTU21D::readHumidity(void)
 float HTU21D::readTemperature(void)
 {
   uint16_t rawTemperature = readValue(TRIGGER_TEMP_MEASURE_NOHOLD);
+
+  if(rawTemperature == ERROR_I2C_TIMEOUT || rawTemperature == ERROR_BAD_CRC) return(rawTemperature);
 
   //Given the raw temperature data, calculate the actual temperature
   float tempTemperature = rawTemperature * (175.72 / 65536.0); //2^16 = 65536
