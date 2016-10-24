@@ -46,7 +46,7 @@ void HTU21D::begin(void)
 float HTU21D::read_value(byte cmd)
 {
 	//Request a humidity reading
-	Wire.beginTransmission(HTDU21D_ADDRESS);
+	Wire.beginTransmission(HTU21D_ADDRESS);
 	Wire.write(cmd); //Measure value (prefer no hold!)
 	Wire.endTransmission();
 
@@ -57,7 +57,7 @@ float HTU21D::read_value(byte cmd)
 	        delay(DELAY_INTERVAL);
 
                 //Comes back in three bytes, data(MSB) / data(LSB) / Checksum
-                num_read = Wire.requestFrom(HTDU21D_ADDRESS, 3);
+                num_read = Wire.requestFrom(HTU21D_ADDRESS, 3);
         }
 
         if (counter == MAX_COUNTER) return 998; //Error out
@@ -133,12 +133,12 @@ byte HTU21D::readUserRegister(void)
   byte userRegister;
   
   //Request the user register
-  Wire.beginTransmission(HTDU21D_ADDRESS);
+  Wire.beginTransmission(HTU21D_ADDRESS);
   Wire.write(READ_USER_REG); //Read the user register
   Wire.endTransmission();
   
   //Read result
-  Wire.requestFrom(HTDU21D_ADDRESS, 1);
+  Wire.requestFrom(HTU21D_ADDRESS, 1);
   
   userRegister = Wire.read();
 
@@ -147,7 +147,7 @@ byte HTU21D::readUserRegister(void)
 
 void HTU21D::writeUserRegister(byte val)
 {
-  Wire.beginTransmission(HTDU21D_ADDRESS);
+  Wire.beginTransmission(HTU21D_ADDRESS);
   Wire.write(WRITE_USER_REG); //Write to the user register
   Wire.write(val); //Write the new resolution bits
   Wire.endTransmission();

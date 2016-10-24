@@ -18,7 +18,7 @@
 
 #include <Wire.h>
 
-#define HTDU21D_ADDRESS 0x40  //Unshifted 7-bit I2C address for the sensor
+#define HTU21D_ADDRESS 0x40  //Unshifted 7-bit I2C address for the sensor
 
 #define TRIGGER_TEMP_MEASURE_HOLD  0xE3
 #define TRIGGER_HUMD_MEASURE_HOLD  0xE5
