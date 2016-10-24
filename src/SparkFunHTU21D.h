@@ -7,6 +7,8 @@
  
  Get humidity and temperature from the HTU21D sensor.
  
+ This same library should work for the other similar sensors including the Si
+ 
  */
  
 
@@ -57,8 +59,8 @@ public:
 private:
   //Private Functions
 
-  byte check_crc(uint16_t message_from_sensor, uint8_t check_value_from_sensor);
-  float read_value(byte cmd);
+  byte checkCRC(uint16_t message_from_sensor, uint8_t check_value_from_sensor);
+  uint16_t readValue(byte cmd);
 
   //Private Variables
 
