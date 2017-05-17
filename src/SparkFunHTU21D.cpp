@@ -55,17 +55,17 @@ uint16_t HTU21D::readValue(byte cmd)
   _i2cPort->endTransmission();
   
   //Hang out while measurement is taken. datasheet says 50ms, practice may call for more
-  byte toRead;
+  bool validResult;
   byte counter;
-  for (counter = 0, toRead = 0 ; counter < MAX_COUNTER && toRead != 3 ; counter++)
+  for (counter = 0, validResult = 0 ; counter < MAX_COUNTER && !validResult ; counter++)
   {
     delay(DELAY_INTERVAL);
 
     //Comes back in three bytes, data(MSB) / data(LSB) / Checksum
-    toRead = _i2cPort->requestFrom(HTU21D_ADDRESS, 3);
+    validResult = (3 == _i2cPort->requestFrom(HTU21D_ADDRESS, 3));
   }
 
-  if (counter == MAX_COUNTER) return (ERROR_I2C_TIMEOUT); //Error out
+  if (!validResult) return (ERROR_I2C_TIMEOUT); //Error out
 
   byte msb, lsb, checksum;
   msb = _i2cPort->read();
